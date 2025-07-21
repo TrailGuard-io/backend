@@ -1,0 +1,30 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String?
+  role      String   @default("user")
+  createdAt DateTime @default(now())
+
+  rescues Rescue[]
+}
+
+model Rescue {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  latitude  Float
+  longitude Float
+  message   String?
+  status    String   @default("pending") // pending | accepted | resolved
+  createdAt DateTime @default(now())
+}
