@@ -243,6 +243,9 @@ router.get("/all", authMiddleware, async (_req: AuthRequest, res) => {
 
 router.get("/my", authMiddleware, async (req: AuthRequest, res) => {
   const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: "No autorizado" });
+  }
 
   try {
     const rescues = await prisma.rescue.findMany({

@@ -7,6 +7,9 @@ const prisma = new PrismaClient();
 
 router.get("/me", authMiddleware, async (req: AuthRequest, res) => {
   const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: "No autorizado" });
+  }
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
