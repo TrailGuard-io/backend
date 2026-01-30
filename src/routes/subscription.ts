@@ -48,6 +48,9 @@ router.get("/plans", (req, res) => {
 // Get user's current subscription
 router.get("/current", authMiddleware, async (req: AuthRequest, res) => {
   const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: "No autorizado" });
+  }
   
   try {
     const user = await prisma.user.findUnique({
@@ -86,6 +89,9 @@ router.get("/current", authMiddleware, async (req: AuthRequest, res) => {
 // Create/upgrade subscription
 router.post("/", authMiddleware, async (req: AuthRequest, res) => {
   const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: "No autorizado" });
+  }
   
   try {
     const validatedData = createSubscriptionSchema.parse(req.body);
@@ -138,6 +144,9 @@ router.post("/", authMiddleware, async (req: AuthRequest, res) => {
 // Cancel subscription
 router.post("/cancel", authMiddleware, async (req: AuthRequest, res) => {
   const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: "No autorizado" });
+  }
   
   try {
     // Mark current active subscription as cancelled
@@ -175,6 +184,9 @@ router.post("/cancel", authMiddleware, async (req: AuthRequest, res) => {
 // Get subscription history
 router.get("/history", authMiddleware, async (req: AuthRequest, res) => {
   const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: "No autorizado" });
+  }
   
   try {
     const subscriptions = await prisma.subscription.findMany({
@@ -193,6 +205,9 @@ router.get("/history", authMiddleware, async (req: AuthRequest, res) => {
 export const checkSubscription = (requiredType: "premium" | "pro") => {
   return async (req: AuthRequest, res: express.Response, next: express.NextFunction) => {
     const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: "No autorizado" });
+    }
     
     try {
       const user = await prisma.user.findUnique({
