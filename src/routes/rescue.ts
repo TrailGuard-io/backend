@@ -1,5 +1,5 @@
 import express from "express";
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import { EventEmitter } from "events";
 import { z } from "zod";
 import { authMiddleware, AuthRequest } from "../middleware/authMiddleware";
