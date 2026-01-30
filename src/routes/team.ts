@@ -23,6 +23,9 @@ const updateTeamSchema = z.object({
 // Create team (Premium feature)
 router.post("/", authMiddleware, async (req: AuthRequest, res) => {
   const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: "No autorizado" });
+  }
   
   try {
     const user = await prisma.user.findUnique({
@@ -80,6 +83,9 @@ router.post("/", authMiddleware, async (req: AuthRequest, res) => {
 // Get all public teams + user's teams
 router.get("/", authMiddleware, async (req: AuthRequest, res) => {
   const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: "No autorizado" });
+  }
   
   try {
     const teams = await prisma.team.findMany({
@@ -118,6 +124,9 @@ router.get("/", authMiddleware, async (req: AuthRequest, res) => {
 // Get team by ID
 router.get("/:id", authMiddleware, async (req: AuthRequest, res) => {
   const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: "No autorizado" });
+  }
   const teamId = parseInt(req.params.id);
   
   try {
@@ -183,6 +192,9 @@ router.get("/:id", authMiddleware, async (req: AuthRequest, res) => {
 // Update team (only owner/admin)
 router.put("/:id", authMiddleware, async (req: AuthRequest, res) => {
   const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: "No autorizado" });
+  }
   const teamId = parseInt(req.params.id);
   
   try {
@@ -237,6 +249,9 @@ router.put("/:id", authMiddleware, async (req: AuthRequest, res) => {
 // Join team
 router.post("/:id/join", authMiddleware, async (req: AuthRequest, res) => {
   const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: "No autorizado" });
+  }
   const teamId = parseInt(req.params.id);
   
   try {
@@ -302,6 +317,9 @@ router.post("/:id/join", authMiddleware, async (req: AuthRequest, res) => {
 // Leave team
 router.post("/:id/leave", authMiddleware, async (req: AuthRequest, res) => {
   const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: "No autorizado" });
+  }
   const teamId = parseInt(req.params.id);
   
   try {
@@ -333,6 +351,9 @@ router.post("/:id/leave", authMiddleware, async (req: AuthRequest, res) => {
 // Get team messages
 router.get("/:id/messages", authMiddleware, async (req: AuthRequest, res) => {
   const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: "No autorizado" });
+  }
   const teamId = parseInt(req.params.id);
   
   try {
@@ -375,6 +396,9 @@ router.get("/:id/messages", authMiddleware, async (req: AuthRequest, res) => {
 // Send message to team
 router.post("/:id/messages", authMiddleware, async (req: AuthRequest, res) => {
   const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: "No autorizado" });
+  }
   const teamId = parseInt(req.params.id);
   const { content } = req.body;
   
