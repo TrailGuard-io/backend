@@ -8,15 +8,178 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  name      String?
-  role      String   @default("user")
-  createdAt DateTime @default(now())
+enum VehicleType {
+  car
+  suv
+  utv
+  truck
+  bus
+  atv
+  motorcycle
+  van
+  other
+}
 
-  rescues Rescue[]
+enum DrivetrainType {
+  two_wd
+  four_wd
+  awd
+}
+
+enum TerrainType {
+  asphalt
+  sand
+  mud
+  rock
+  snow
+  water
+  gravel
+  other
+}
+
+enum ProblemType {
+  stuck
+  mechanical
+  flat_tire
+  battery
+  fuel
+  accident
+  other
+}
+
+enum AssistanceStatus {
+  none
+  en_route
+  on_site
+  needs_more_help
+  resolved
+}
+
+enum AssistanceChannel {
+  none
+  community
+  official
+  commercial
+  private
+}
+
+model User {
+  id               Int      @id @default(autoincrement())
+  email            String   @unique
+  password         String
+  name             String?
+  role             String   @default("user")
+  subscriptionType String   @default("free") // free | premium | pro
+  subscriptionEnds DateTime?
+  avatar           String?
+  bio              String?
+  phone            String?
+  emergencyContact String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  rescues           Rescue[]
+  ownedTeams        Team[]          @relation("TeamOwner")
+  teamMemberships   TeamMember[]
+  expeditions       Expedition[]    @relation("ExpeditionCreator")
+  expeditionMembers ExpeditionMember[]
+  messages          Message[]
+  subscriptions     Subscription[]
+}
+
+model Team {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  avatar      String?
+  isPublic    Boolean  @default(true)
+  maxMembers  Int      @default(10)
+  owner       User     @relation("TeamOwner", fields: [ownerId], references: [id])
+  ownerId     Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members     TeamMember[]
+  expeditions Expedition[]
+  messages    Message[]
+}
+
+model TeamMember {
+  id       Int      @id @default(autoincrement())
+  team     Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId   Int
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   Int
+  role     String   @default("member") // member | admin
+  joinedAt DateTime @default(now())
+
+  @@unique([teamId, userId])
+}
+
+model Expedition {
+  id            Int      @id @default(autoincrement())
+  title         String
+  description   String?
+  startDate     DateTime
+  endDate       DateTime?
+  difficulty    String   @default("beginner") // beginner | intermediate | advanced | expert
+  maxParticipants Int    @default(10)
+  cost          Float?
+  isPremium     Boolean  @default(false)
+  status        String   @default("planned") // planned | active | completed | cancelled
+  startLat      Float?
+  startLng      Float?
+  endLat        Float?
+  endLng        Float?
+  route         Json?    // GPS waypoints
+  creator       User     @relation("ExpeditionCreator", fields: [creatorId], references: [id])
+  creatorId     Int
+  team          Team?    @relation(fields: [teamId], references: [id])
+  teamId        Int?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  members   ExpeditionMember[]
+  messages  Message[]
+}
+
+model ExpeditionMember {
+  id           Int        @id @default(autoincrement())
+  expedition   Expedition @relation(fields: [expeditionId], references: [id], onDelete: Cascade)
+  expeditionId Int
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       Int
+  status       String     @default("pending") // pending | confirmed | cancelled
+  joinedAt     DateTime   @default(now())
+
+  @@unique([expeditionId, userId])
+}
+
+model Message {
+  id           Int         @id @default(autoincrement())
+  content      String
+  author       User        @relation(fields: [authorId], references: [id])
+  authorId     Int
+  team         Team?       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId       Int?
+  expedition   Expedition? @relation(fields: [expeditionId], references: [id], onDelete: Cascade)
+  expeditionId Int?
+  createdAt    DateTime    @default(now())
+}
+
+model Subscription {
+  id           Int      @id @default(autoincrement())
+  user         User     @relation(fields: [userId], references: [id])
+  userId       Int
+  type         String   // premium | pro
+  status       String   @default("active") // active | cancelled | expired
+  startDate    DateTime @default(now())
+  endDate      DateTime
+  paymentId    String?  // For payment processor reference
+  amount       Float
+  currency     String   @default("USD")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model Rescue {
@@ -27,5 +190,20 @@ model Rescue {
   longitude Float
   message   String?
   status    String   @default("pending") // pending | accepted | resolved
+  vehicleType        VehicleType?
+  drivetrain         DrivetrainType?
+  terrainType        TerrainType?
+  problemType        ProblemType?
+  assistanceStatus   AssistanceStatus @default(none)
+  assistanceChannel  AssistanceChannel @default(none)
+  assistanceProvider String?
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdAt])
+  @@index([status])
+  @@index([latitude, longitude])
+  @@index([vehicleType])
+  @@index([terrainType])
+  @@index([assistanceStatus])
 }
