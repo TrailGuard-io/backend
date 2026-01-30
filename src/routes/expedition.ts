@@ -51,6 +51,9 @@ const updateExpeditionSchema = z.object({
 // Create expedition (Premium feature)
 router.post("/", authMiddleware, async (req: AuthRequest, res) => {
   const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: "No autorizado" });
+  }
   
   try {
     const user = await prisma.user.findUnique({
@@ -132,6 +135,9 @@ router.post("/", authMiddleware, async (req: AuthRequest, res) => {
 // Get all expeditions (public + user's expeditions)
 router.get("/", authMiddleware, async (req: AuthRequest, res) => {
   const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: "No autorizado" });
+  }
   const { difficulty, status, teamId } = req.query;
   
   try {
@@ -191,6 +197,9 @@ router.get("/", authMiddleware, async (req: AuthRequest, res) => {
 // Get expedition by ID
 router.get("/:id", authMiddleware, async (req: AuthRequest, res) => {
   const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: "No autorizado" });
+  }
   const expeditionId = parseInt(req.params.id);
   
   try {
@@ -249,6 +258,9 @@ router.get("/:id", authMiddleware, async (req: AuthRequest, res) => {
 // Update expedition (only creator)
 router.put("/:id", authMiddleware, async (req: AuthRequest, res) => {
   const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: "No autorizado" });
+  }
   const expeditionId = parseInt(req.params.id);
   
   try {
@@ -308,6 +320,9 @@ router.put("/:id", authMiddleware, async (req: AuthRequest, res) => {
 // Join expedition
 router.post("/:id/join", authMiddleware, async (req: AuthRequest, res) => {
   const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: "No autorizado" });
+  }
   const expeditionId = parseInt(req.params.id);
   
   try {
@@ -373,6 +388,9 @@ router.post("/:id/join", authMiddleware, async (req: AuthRequest, res) => {
 // Leave expedition
 router.post("/:id/leave", authMiddleware, async (req: AuthRequest, res) => {
   const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: "No autorizado" });
+  }
   const expeditionId = parseInt(req.params.id);
   
   try {
@@ -404,6 +422,9 @@ router.post("/:id/leave", authMiddleware, async (req: AuthRequest, res) => {
 // Confirm/reject expedition member (creator only)
 router.post("/:id/members/:memberId/status", authMiddleware, async (req: AuthRequest, res) => {
   const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: "No autorizado" });
+  }
   const expeditionId = parseInt(req.params.id);
   const memberId = parseInt(req.params.memberId);
   const { status } = req.body;
@@ -454,6 +475,9 @@ router.post("/:id/members/:memberId/status", authMiddleware, async (req: AuthReq
 // Get expedition messages
 router.get("/:id/messages", authMiddleware, async (req: AuthRequest, res) => {
   const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: "No autorizado" });
+  }
   const expeditionId = parseInt(req.params.id);
   
   try {
@@ -496,6 +520,9 @@ router.get("/:id/messages", authMiddleware, async (req: AuthRequest, res) => {
 // Send message to expedition
 router.post("/:id/messages", authMiddleware, async (req: AuthRequest, res) => {
   const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: "No autorizado" });
+  }
   const expeditionId = parseInt(req.params.id);
   const { content } = req.body;
   
