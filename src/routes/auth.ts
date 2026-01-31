@@ -10,18 +10,21 @@ const prisma = new PrismaClient();
 const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
+  name: z.string().min(2).max(80).optional(),
+  acceptTerms: z.boolean().optional(),
+  acceptPrivacy: z.boolean().optional(),
 });
 
 router.post("/register", async (req, res) => {
   const parsed = registerSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json(parsed.error);
 
-  const { email, password } = parsed.data;
+  const { email, password, name } = parsed.data;
   const hashed = await bcrypt.hash(password, 10);
 
   try {
     const user = await prisma.user.create({
-      data: { email, password: hashed },
+      data: { email, password: hashed, name },
     });
     res.status(201).json({ id: user.id, email: user.email });
   } catch (e) {

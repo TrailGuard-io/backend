@@ -326,6 +326,17 @@ router.post("/:id/join", authMiddleware, async (req: AuthRequest, res) => {
   const expeditionId = parseInt(req.params.id);
   
   try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { subscriptionType: true },
+    });
+
+    if (user?.subscriptionType === "free") {
+      return res
+        .status(403)
+        .json({ error: "Premium subscription required to join expeditions" });
+    }
+
     const expedition = await prisma.expedition.findUnique({
       where: { id: expeditionId },
       include: {
