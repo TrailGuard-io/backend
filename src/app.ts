@@ -11,8 +11,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const apiBase = process.env.VERCEL ? "/" : "/api";
-app.use(apiBase, routes);
+app.use("/api", routes);
+if (process.env.VERCEL) {
+  app.use("/", routes);
+}
 
 app.get("/", (_req, res) => {
   res.send("TrailGuard API running");
