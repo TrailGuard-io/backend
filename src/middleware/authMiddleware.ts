@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
 export interface AuthRequest extends Request {
-  user?: { id: number; email: string; role: string };
+  user?: Express.User;
 }
 
 export function authMiddleware(

@@ -3,9 +3,50 @@ import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import passport from "passport";
 
 const router = express.Router();
 const prisma = new PrismaClient();
+const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+const auth = passport.authenticate.bind(passport) as unknown as (
+  strategy: string,
+  options?: any,
+  callback?: any
+) => any;
+
+const redirectWithError = (res: express.Response, message: string) => {
+  const url = new URL(`${frontendUrl}/auth/callback`);
+  url.searchParams.set("error", message);
+  res.redirect(url.toString());
+};
+
+const redirectWithToken = (res: express.Response, token: string) => {
+  const url = new URL(`${frontendUrl}/auth/callback`);
+  url.searchParams.set("token", token);
+  res.redirect(url.toString());
+};
+
+const ensureProviderEnabled = (provider: "google" | "facebook" | "apple") => {
+  const enabled =
+    (provider === "google" &&
+      process.env.GOOGLE_CLIENT_ID &&
+      process.env.GOOGLE_CLIENT_SECRET) ||
+    (provider === "facebook" &&
+      process.env.FACEBOOK_CLIENT_ID &&
+      process.env.FACEBOOK_CLIENT_SECRET) ||
+    (provider === "apple" &&
+      process.env.APPLE_CLIENT_ID &&
+      process.env.APPLE_TEAM_ID &&
+      process.env.APPLE_KEY_ID &&
+      process.env.APPLE_PRIVATE_KEY);
+
+  return (_req: express.Request, res: express.Response, next: express.NextFunction) => {
+    if (!enabled) {
+      return redirectWithError(res, `${provider}_not_configured`);
+    }
+    next();
+  };
+};
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -49,5 +90,91 @@ router.post("/login", async (req, res) => {
 
   res.json({ token });
 });
+
+router.get(
+  "/google",
+  ensureProviderEnabled("google"),
+  auth("google", { scope: ["profile", "email"], session: false })
+);
+
+router.get(
+  "/google/callback",
+  ensureProviderEnabled("google"),
+  (req, res, next) => {
+    auth("google", { session: false }, (err: any, user: any) => {
+      if (err || !user) {
+        return redirectWithError(res, err?.message || "google_login_failed");
+      }
+      const token = jwt.sign(
+        { id: (user as any).id, email: (user as any).email },
+        process.env.JWT_SECRET!,
+        { expiresIn: "7d" }
+      );
+      return redirectWithToken(res, token);
+    })(req, res, next);
+  }
+);
+
+router.get(
+  "/facebook",
+  ensureProviderEnabled("facebook"),
+  auth("facebook", { scope: ["email"], session: false })
+);
+
+router.get(
+  "/facebook/callback",
+  ensureProviderEnabled("facebook"),
+  (req, res, next) => {
+    auth("facebook", { session: false }, (err: any, user: any) => {
+      if (err || !user) {
+        return redirectWithError(res, err?.message || "facebook_login_failed");
+      }
+      const token = jwt.sign(
+        { id: (user as any).id, email: (user as any).email },
+        process.env.JWT_SECRET!,
+        { expiresIn: "7d" }
+      );
+      return redirectWithToken(res, token);
+    })(req, res, next);
+  }
+);
+
+router.get(
+  "/apple",
+  ensureProviderEnabled("apple"),
+  auth("apple", { session: false })
+);
+
+router.post(
+  "/apple/callback",
+  ensureProviderEnabled("apple"),
+  (req, res) => {
+    const url = new URL(`${process.env.BACKEND_URL || "http://localhost:3001"}/api/auth/apple/callback`);
+    const { code, state, id_token, user } = req.body || {};
+    if (code) url.searchParams.set("code", code);
+    if (state) url.searchParams.set("state", state);
+    if (id_token) url.searchParams.set("id_token", id_token);
+    if (user) url.searchParams.set("user", user);
+    res.redirect(url.toString());
+  }
+);
+
+router.get(
+  "/apple/callback",
+  ensureProviderEnabled("apple"),
+  (req, res, next) => {
+    auth("apple", { session: false }, (err: any, user: any) => {
+      if (err || !user) {
+        return redirectWithError(res, err?.message || "apple_login_failed");
+      }
+      const token = jwt.sign(
+        { id: (user as any).id, email: (user as any).email },
+        process.env.JWT_SECRET!,
+        { expiresIn: "7d" }
+      );
+      return redirectWithToken(res, token);
+    })(req, res, next);
+  }
+);
 
 export default router;
