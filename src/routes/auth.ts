@@ -177,4 +177,37 @@ router.get(
   }
 );
 
+router.post("/logout", (req, res) => {
+  const finish = () => {
+    res.clearCookie("connect.sid");
+    res.json({ message: "logout_success" });
+  };
+
+  const destroySession = () => {
+    const session = (req as any).session;
+    if (session?.destroy) {
+      session.destroy((err: any) => {
+        if (err) {
+          return res.status(500).json({ error: "logout_failed" });
+        }
+        finish();
+      });
+      return;
+    }
+    finish();
+  };
+
+  const logout = (req as any).logout;
+  if (typeof logout === "function") {
+    logout.call(req, (err: any) => {
+      if (err) {
+        return res.status(500).json({ error: "logout_failed" });
+      }
+      destroySession();
+    });
+  } else {
+    destroySession();
+  }
+});
+
 export default router;
