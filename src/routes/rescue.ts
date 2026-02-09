@@ -275,6 +275,7 @@ router.post("/:id/candidates", authMiddleware, async (req: AuthRequest, res) => 
       where: { id: rescueId },
       select: {
         id: true,
+        userId: true,
         status: true,
         assignedRescuerId: true,
         assignedTeamId: true,
