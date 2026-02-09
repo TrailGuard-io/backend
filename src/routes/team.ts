@@ -121,6 +121,33 @@ router.get("/", authMiddleware, async (req: AuthRequest, res) => {
   }
 });
 
+// Get user's teams (membership/owner)
+router.get("/mine", authMiddleware, async (req: AuthRequest, res) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: "No autorizado" });
+  }
+
+  try {
+    const teams = await prisma.team.findMany({
+      where: {
+        members: { some: { userId } },
+      },
+      select: {
+        id: true,
+        name: true,
+        avatar: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    res.json(teams);
+  } catch (error) {
+    console.error("Error fetching my teams:", error);
+    res.status(500).json({ error: "Could not fetch teams" });
+  }
+});
+
 // Get team by ID
 router.get("/:id", authMiddleware, async (req: AuthRequest, res) => {
   const userId = req.user?.id;

@@ -20,12 +20,23 @@ export function authMiddleware(
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
-      id: number;
+      id: number | string;
       email: string;
-      role: string;
+      role?: string;
     };
 
-    req.user = decoded;
+    const id =
+      typeof decoded.id === "string" ? Number(decoded.id) : decoded.id;
+
+    if (!id || Number.isNaN(id)) {
+      return res.status(401).json({ error: "Token inválido o expirado" });
+    }
+
+    req.user = {
+      id,
+      email: decoded.email,
+      role: decoded.role ?? "user",
+    };
     next();
   } catch (err) {
     return res.status(401).json({ error: "Token inválido o expirado" });

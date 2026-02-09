@@ -28,6 +28,9 @@ describe("rescueFilters", () => {
   it("matchesStreamFilters respects type and bbox", () => {
     const rescue: RescueStreamRecord = {
       id: 1,
+      userId: 10,
+      assignedRescuerId: null,
+      assignedTeamId: null,
       latitude: -38.0,
       longitude: -57.5,
       message: null,
@@ -39,6 +42,9 @@ describe("rescueFilters", () => {
       assistanceStatus: "none",
       assistanceChannel: "community",
       assistanceProvider: null,
+      rescuerLatitude: null,
+      rescuerLongitude: null,
+      rescuerUpdatedAt: null,
       createdAt: new Date("2025-01-01T10:00:00Z"),
       updatedAt: new Date("2025-01-01T10:00:00Z"),
     };
@@ -70,6 +76,9 @@ describe("rescueFilters", () => {
   it("matchesStreamFilters rejects outside bbox", () => {
     const rescue: RescueStreamRecord = {
       id: 2,
+      userId: 11,
+      assignedRescuerId: null,
+      assignedTeamId: null,
       latitude: -35.0,
       longitude: -57.5,
       message: null,
@@ -81,6 +90,9 @@ describe("rescueFilters", () => {
       assistanceStatus: "none",
       assistanceChannel: "none",
       assistanceProvider: null,
+      rescuerLatitude: null,
+      rescuerLongitude: null,
+      rescuerUpdatedAt: null,
       createdAt: new Date("2025-01-01T10:00:00Z"),
       updatedAt: new Date("2025-01-01T10:00:00Z"),
     };

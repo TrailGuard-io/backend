@@ -72,6 +72,9 @@ export const rescueQuerySchema = z.object({
 
 export type RescueStreamRecord = {
   id: number;
+  userId: number;
+  assignedRescuerId: number | null;
+  assignedTeamId: number | null;
   latitude: number;
   longitude: number;
   message: string | null;
@@ -83,6 +86,9 @@ export type RescueStreamRecord = {
   assistanceStatus: (typeof ASSISTANCE_STATUSES)[number] | null;
   assistanceChannel: (typeof ASSISTANCE_CHANNELS)[number] | null;
   assistanceProvider: string | null;
+  rescuerLatitude: number | null;
+  rescuerLongitude: number | null;
+  rescuerUpdatedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 };
