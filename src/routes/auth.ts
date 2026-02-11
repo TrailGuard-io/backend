@@ -26,19 +26,14 @@ const redirectWithToken = (res: express.Response, token: string) => {
   res.redirect(url.toString());
 };
 
-const ensureProviderEnabled = (provider: "google" | "facebook" | "apple") => {
+const ensureProviderEnabled = (provider: "google" | "facebook") => {
   const enabled =
     (provider === "google" &&
       process.env.GOOGLE_CLIENT_ID &&
       process.env.GOOGLE_CLIENT_SECRET) ||
     (provider === "facebook" &&
       process.env.FACEBOOK_CLIENT_ID &&
-      process.env.FACEBOOK_CLIENT_SECRET) ||
-    (provider === "apple" &&
-      process.env.APPLE_CLIENT_ID &&
-      process.env.APPLE_TEAM_ID &&
-      process.env.APPLE_KEY_ID &&
-      process.env.APPLE_PRIVATE_KEY);
+      process.env.FACEBOOK_CLIENT_SECRET);
 
   return (_req: express.Request, res: express.Response, next: express.NextFunction) => {
     if (!enabled) {
@@ -128,44 +123,6 @@ router.get(
     auth("facebook", { session: false }, (err: any, user: any) => {
       if (err || !user) {
         return redirectWithError(res, err?.message || "facebook_login_failed");
-      }
-      const token = jwt.sign(
-        { id: (user as any).id, email: (user as any).email },
-        process.env.JWT_SECRET!,
-        { expiresIn: "7d" }
-      );
-      return redirectWithToken(res, token);
-    })(req, res, next);
-  }
-);
-
-router.get(
-  "/apple",
-  ensureProviderEnabled("apple"),
-  auth("apple", { session: false })
-);
-
-router.post(
-  "/apple/callback",
-  ensureProviderEnabled("apple"),
-  (req, res) => {
-    const url = new URL(`${process.env.BACKEND_URL || "http://localhost:3001"}/api/auth/apple/callback`);
-    const { code, state, id_token, user } = req.body || {};
-    if (code) url.searchParams.set("code", code);
-    if (state) url.searchParams.set("state", state);
-    if (id_token) url.searchParams.set("id_token", id_token);
-    if (user) url.searchParams.set("user", user);
-    res.redirect(url.toString());
-  }
-);
-
-router.get(
-  "/apple/callback",
-  ensureProviderEnabled("apple"),
-  (req, res, next) => {
-    auth("apple", { session: false }, (err: any, user: any) => {
-      if (err || !user) {
-        return redirectWithError(res, err?.message || "apple_login_failed");
       }
       const token = jwt.sign(
         { id: (user as any).id, email: (user as any).email },

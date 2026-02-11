@@ -1,7 +1,6 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as FacebookStrategy } from "passport-facebook";
-import AppleStrategy from "passport-apple";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
@@ -14,19 +13,6 @@ const getNameFromProfile = (profile: { displayName?: string; name?: any }) => {
   const last = profile.name?.familyName || profile.name?.lastName || "";
   const combined = `${first} ${last}`.trim();
   return combined || undefined;
-};
-
-const parseAppleName = (rawUser?: string) => {
-  if (!rawUser) return undefined;
-  try {
-    const parsed = JSON.parse(rawUser);
-    const first = parsed?.name?.firstName || "";
-    const last = parsed?.name?.lastName || "";
-    const combined = `${first} ${last}`.trim();
-    return combined || undefined;
-  } catch {
-    return undefined;
-  }
 };
 
 const ensureOAuthUser = async (
@@ -135,55 +121,6 @@ if (process.env.FACEBOOK_CLIENT_ID && process.env.FACEBOOK_CLIENT_SECRET) {
           const avatar = profile.photos?.[0]?.value;
           const name = getNameFromProfile(profile);
           const user = await ensureOAuthUser("facebook", profile.id, {
-            email,
-            name,
-            avatar,
-          });
-          done(null, user);
-        } catch (error) {
-          done(error as Error);
-        }
-      }
-    )
-  );
-}
-
-const appleKey = process.env.APPLE_PRIVATE_KEY?.replace(/\\n/g, "\n");
-
-if (
-  process.env.APPLE_CLIENT_ID &&
-  process.env.APPLE_TEAM_ID &&
-  process.env.APPLE_KEY_ID &&
-  appleKey
-) {
-  passport.use(
-    new AppleStrategy(
-      {
-        clientID: process.env.APPLE_CLIENT_ID,
-        teamID: process.env.APPLE_TEAM_ID,
-        keyID: process.env.APPLE_KEY_ID,
-        privateKeyString: appleKey,
-        callbackURL: `${backendUrl}/api/auth/apple/callback`,
-        scope: ["name", "email"],
-        passReqToCallback: true,
-      },
-      async (
-        req: any,
-        _accessToken: string,
-        _refreshToken: string,
-        _idToken: string,
-        profile: any,
-        done: any
-      ) => {
-        try {
-          const email = profile.email;
-          const avatar = null;
-          const name =
-            getNameFromProfile(profile) ||
-            parseAppleName(req?.query?.user) ||
-            parseAppleName(req?.body?.user);
-          const providerId = profile.id || profile.sub;
-          const user = await ensureOAuthUser("apple", providerId, {
             email,
             name,
             avatar,
